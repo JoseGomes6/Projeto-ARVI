@@ -1,5 +1,7 @@
 /* THE DARK ROOM — botão/etiqueta 3D desenhado em canvas (painéis de teclado, puzzle e símbolos).
  * Os painéis são "ecrãs" emissivos (MeshBasicMaterial) para serem legíveis mesmo às escuras. */
+const w_ = (g) => g.canvas.width;
+
 AFRAME.registerComponent('ui-button', {
   schema: {
     w: { default: 0.1 }, h: { default: 0.1 },
@@ -9,6 +11,7 @@ AFRAME.registerComponent('ui-button', {
     selected: { default: false }, disabled: { default: false },
     flash: { default: '' },                            // cor temporária (feedback certo/errado)
     static: { default: false }, align: { default: 'center' },
+    wrap: { default: false }, fontpx: { default: 26 },    // texto corrido com quebra de linha
   },
 
   init() {
@@ -48,7 +51,18 @@ AFRAME.registerComponent('ui-button', {
       g.drawImage(src, (w - s * (src.width / src.height)) / 2, (h - s) / 2, s * (src.width / src.height), s);
       g.globalAlpha = 1;
     }
-    if (D.label) {
+    if (D.label && D.wrap) {
+      g.fillStyle = fg; g.font = `${D.fontpx}px "Helvetica Neue", Arial, sans-serif`; g.textBaseline = 'top'; g.textAlign = 'left';
+      let y = 14;
+      D.label.split('\n').forEach((para) => {
+        let line = '';
+        para.split(' ').forEach((w) => {
+          const t = line ? line + ' ' + w : w;
+          if (g.measureText(t).width > w_(g) - 28 && line) { g.fillText(line, 14, y); y += D.fontpx * 1.3; line = w; } else line = t;
+        });
+        g.fillText(line, 14, y); y += D.fontpx * 1.5;
+      });
+    } else if (D.label) {
       g.fillStyle = fg;
       g.font = `600 ${Math.round(h * D.size)}px "Helvetica Neue", Arial, sans-serif`;
       g.textBaseline = 'middle';

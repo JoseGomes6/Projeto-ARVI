@@ -31,6 +31,9 @@ AFRAME.registerSystem('dr-interaction', {
     cam.getWorldDirection(d);
   },
 
+  /** Interação ativa a jogar, ou no painel final (fim de jogo). */
+  active() { const st = DR.state; return st.phase === 'playing' || (st.phase === 'ended' && st.modal); },
+
   available(el) {
     const c = el.components.interactable;
     if (!c || !c.data.enabled) return false;
@@ -44,12 +47,13 @@ AFRAME.registerSystem('dr-interaction', {
     if (el === this.hover) return;
     if (this.hover) this.hover.emit('hover-end');
     this.hover = el;
-    if (el) { el.emit('hover-start'); DR.ui.prompt(el.components.interactable.data.label); }
-    else DR.ui.prompt(null);
+    const label = el ? el.components.interactable.data.label : null;
+    if (el) { el.emit('hover-start'); DR.ui.prompt(label); } else DR.ui.prompt(null);
+    DR.bus.emit('hover', label);
   },
 
   tick() {
-    if (DR.state.phase !== 'playing') { if (this.hover) this.setHover(null); return; }
+    if (!this.active()) { if (this.hover) this.setHover(null); return; }
     this.aim(this.o, this.d);
     this.ray.set(this.o, this.d);
     this.ray.far = 7;
@@ -78,7 +82,7 @@ AFRAME.registerSystem('dr-interaction', {
   },
 
   activate() {
-    if (DR.state.phase !== 'playing' || !this.hover) return;
+    if (!this.active() || !this.hover) return;
     DR.audio.click();
     this.hover.emit('interact');
   },

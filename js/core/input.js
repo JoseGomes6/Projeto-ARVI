@@ -61,12 +61,18 @@
         session.addEventListener('squeezestart', () => DR.bus.emit('torch-toggle'));
       };
       scene.addEventListener('enter-vr', onXR);
-      ['handR', 'handL'].forEach((id) => {
-        const h = document.getElementById(id);
-        if (!h) return;
-        ['bbuttondown', 'ybuttondown'].forEach((n) => h.addEventListener(n, () => DR.bus.emit('cancel')));
-        ['abuttondown', 'xbuttondown'].forEach((n) => h.addEventListener(n, () => DR.bus.emit('help')));
-      });
+      // Comandos Touch (Quest):
+      //   gatilho = usar/marcar · grip = lanterna · A = dica (ou concluir marcação) · B = fechar/desfazer
+      //   X = menu 3D (ou concluir marcação) · Y = som · stick esq. = andar · stick dir. = rodar
+      const hr = document.getElementById('handR'), hl = document.getElementById('handL');
+      if (hr) {
+        hr.addEventListener('abuttondown', () => DR.bus.emit(DR.state.phase === 'placing' ? 'help' : 'hint'));
+        hr.addEventListener('bbuttondown', () => DR.bus.emit('cancel'));
+      }
+      if (hl) {
+        hl.addEventListener('xbuttondown', () => DR.bus.emit('help'));
+        hl.addEventListener('ybuttondown', () => DR.bus.emit('mute-toggle'));
+      }
     },
   };
 })();

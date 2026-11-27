@@ -47,6 +47,10 @@
     return root;
   }
 
+  function textBox(root, y, h, text) {
+    return el(root, { position: `0 ${y} 0.004`, 'ui-button': { w: 0.56, h, label: text, wrap: true, fontpx: 24, static: true, bg: '#050506', fg: '#d2cdc6', line: '#2b2a28' } });
+  }
+
   DR.panels = {
     isOpen: () => !!current,
     close() {
@@ -57,6 +61,51 @@
       DR.state.modal = false;
       DR.ui.prompt(null);
       if (c.onClose) c.onClose();
+    },
+
+    /* ---------------- menu 3D (headset): os botões do ecrã 2D ---------------- */
+    menu() {
+      const root = openRoot(0.62, 0.7, 'Menu', null);
+      const items = [
+        ['Dica', 'Pedir uma dica', () => { DR.panels.close(); setTimeout(() => DR.bus.emit('hint'), 60); }],
+        [DR.audio.isMuted() ? 'Som: desligado' : 'Som: ligado', 'Ligar ou desligar o som', (b) => { DR.audio.toggleMute(); set(b, 'label', DR.audio.isMuted() ? 'Som: desligado' : 'Som: ligado'); }],
+        ['Notas', 'Ver as notas encontradas', () => DR.panels.notes()],
+        ['Controlos', 'Ver os botões do comando', () => DR.panels.controls()],
+        ['Continuar', 'Fechar o menu', () => DR.panels.close()],
+      ];
+      items.forEach((it, i) => {
+        const b = button(root, 0, 0.19 - i * 0.12, 0.5, 0.095, { label: it[0], size: 0.42 }, it[1], () => it[2](b));
+      });
+    },
+
+    notes() {
+      const root = openRoot(0.64, 0.66, 'Notas', null);
+      const lines = DR.state.journal.slice(-7);
+      textBox(root, 0.01, 0.46, lines.length ? lines.map((l) => '• ' + l).join('\n') : 'Ainda não encontraste nada.');
+      button(root, 0, -0.27, 0.3, 0.075, { label: 'Voltar', size: 0.45 }, 'Voltar ao menu', () => DR.panels.menu());
+    },
+
+    controls() {
+      const root = openRoot(0.64, 0.66, 'Controlos', null);
+      textBox(root, 0.01, 0.46, [
+        'Gatilho: usar o que apontas',
+        'Grip: ligar ou desligar a lanterna',
+        'A: pedir uma dica',
+        'B: fechar o painel / desfazer',
+        'X: abrir este menu',
+        'Y: som ligado / desligado',
+        'Stick esquerdo: andar',
+        'Stick direito: rodar (VR)',
+      ].join('\n'));
+      button(root, 0, -0.27, 0.3, 0.075, { label: 'Voltar', size: 0.45 }, 'Voltar ao menu', () => DR.panels.menu());
+    },
+
+    /** Fim de jogo dentro do headset (o ecrã 2D não se vê). */
+    finish() {
+      const root = openRoot(0.6, 0.52, 'Fim', null);
+      textBox(root, 0.03, 0.2, 'Conseguiste sair.\nPistas: ' + DR.state.foundTotal() + ' de ' + DR.state.totalClues() + '.');
+      button(root, 0, -0.115, 0.46, 0.085, { label: 'Jogar outra vez', size: 0.42 }, 'Jogar outra vez', () => location.reload());
+      button(root, 0, -0.215, 0.46, 0.085, { label: 'Sair do VR', size: 0.42 }, 'Sair do VR', () => { const sc = document.getElementById('scene'); try { sc.exitVR(); } catch (e) { location.reload(); } });
     },
 
     /* ---------------- NÍVEL 1: teclado ---------------- */

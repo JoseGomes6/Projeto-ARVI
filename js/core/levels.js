@@ -195,6 +195,7 @@
       // a porta existe desde o início (fechada, só visível quando iluminada)
       door = DR.props.door(l.door);
       DR.ui.say(S.intro);
+      if (DR.ui.isHeadset()) DR.ui.say('Gatilho usa. Grip liga a lanterna. A dá uma dica. X abre o menu.', { journal: false });
       this.start(1);
     },
 
@@ -243,6 +244,7 @@
       DR.ui.clearSay();
       if (n >= 3) DR.ui.say(S.ending, { journal: false });
       DR.ui.endScreen((performance.now() - st.startedAt) / 1000);
+      if (DR.ui.isHeadset()) DR.panels.finish();
       DR.bus.emit('hud-changed', null);
     },
 

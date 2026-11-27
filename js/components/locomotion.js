@@ -13,8 +13,25 @@ AFRAME.registerComponent('locomotion', {
     window.addEventListener('keydown', (e) => { this.keys[e.code] = true; });
     window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
     window.addEventListener('blur', () => { this.keys = {}; });
+    const hr = document.getElementById('handR');
+    if (hr) hr.addEventListener('thumbstickmoved', (e) => this.snapTurn(e.detail.x));
     const hl = document.getElementById('handL');
     if (hl) hl.addEventListener('thumbstickmoved', (e) => { this.stick.x = e.detail.x; this.stick.y = e.detail.y; });
+  },
+
+  /** Stick direito: rotação em passos de 30º (só em VR; em AR rodas o corpo). */
+  snapTurn(x) {
+    const sc = this.el.sceneEl;
+    if (!sc.is('vr-mode') || sc.is('ar-mode') || DR.state.phase !== 'playing') return;
+    if (Math.abs(x) < 0.3) { this.turned = false; return; }
+    if (Math.abs(x) < 0.75 || this.turned) return;
+    this.turned = true;
+    const ang = -Math.sign(x) * Math.PI / 6, rig = this.el.object3D;
+    const hp = new THREE.Vector3(); document.getElementById('head').object3D.getWorldPosition(hp);
+    const d = rig.position.clone().sub(hp); d.y = 0;
+    d.applyAxisAngle(new THREE.Vector3(0, 1, 0), ang);
+    rig.rotation.y += ang;
+    rig.position.x = hp.x + d.x; rig.position.z = hp.z + d.z;
   },
 
   tick(t, dtMs) {

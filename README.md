@@ -19,7 +19,7 @@ python3 -m http.server 8000      # ou: npx serve .
 * **WebXR (Quest / Chrome Android)** — exige **HTTPS** (ou `localhost` via `adb reverse tcp:8000 tcp:8000`).
   Opções: `ngrok http 8000`, `npx local-ssl-proxy`, ou GitHub Pages.
   * **AR**: marca paredes/mesas/chão com a mira (toque / gatilho). A sala real fica quase preta, exceto onde o feixe passa.
-  * **VR**: sala virtual à medida. Comando direito = lanterna · gatilho interagir · grip liga/desliga · A/X ajuda · B/Y fecha painel · stick esquerdo move.
+  * **VR**: sala virtual à medida. Comando direito = lanterna. Gatilho usa · grip liga/desliga a lanterna · A dica · B fecha o painel ou desfaz · X menu 3D (dica, som, notas, controlos) · Y som · stick esquerdo anda · stick direito roda 30º. Na marcação do espaço, A ou X concluem.
 * `?reveal` no URL mostra todas as pistas (debug); `?autostart` salta o menu.
 
 ## Arquitetura

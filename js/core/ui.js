@@ -51,7 +51,19 @@
         g.style.backgroundImage = 'url(' + c.toDataURL() + ')';
       };
       draw(); setInterval(draw, 120);
-      DR.bus.on('help', () => { if (DR.state.phase !== 'placing') this.toggleModal('modal-help'); });
+      DR.bus.on('help', () => {
+        if (DR.state.phase === 'placing') return;
+        if (this.isHeadset()) { if (DR.panels.isOpen()) DR.panels.close(); else if (DR.state.phase === 'playing') DR.panels.menu(); }
+        else this.toggleModal('modal-help');
+      });
+    },
+
+    /** Dentro do headset não há DOM: os avisos passam para o HUD 3D e para painéis 3D. */
+    isHeadset() {
+      const sc = document.getElementById('scene');
+      if (!(sc.is('vr-mode') || sc.is('ar-mode'))) return false;
+      const sess = sc.renderer.xr.getSession();
+      return !(sess && sess.domOverlayState);
     },
 
     show(id) { $(id).classList.remove('hidden'); },
@@ -64,6 +76,7 @@
     },
 
     toast(text, ms) {
+      if (this.isHeadset()) { this.say(text, { journal: false }); return; }
       const t = $('toast'); t.textContent = text; t.classList.remove('hidden');
       clearTimeout(t._t); t._t = setTimeout(() => t.classList.add('hidden'), ms || 2200);
     },
@@ -152,6 +165,7 @@
     clearSay() { subQueue = []; subBusy = false; clearTimeout(subTimer); clearInterval(typeTimer); $('subtitle').classList.add('hidden'); },
 
     async titleCard(title, sub, ms) {
+      if (this.isHeadset()) { this.say(title + (sub ? '. ' + sub : ''), { journal: false }); await DR.util.sleep(ms || 2800); return; }
       $('tc-title').textContent = title; $('tc-sub').textContent = sub || '';
       this.show('titlecard');
       await DR.util.sleep(ms || 2800);
@@ -167,6 +181,8 @@
 
     /* ---------- marcação do espaço ---------- */
     placing(count, min, text) {
+      DR.bus.emit('placing-changed', { count, min, text: text || this._placingText });
+      if (text) this._placingText = text;
       $('placing-count').textContent = count + ' / ' + min + (count >= min ? '  ✓' : '');
       if (text) $('placing-text').textContent = text;
     },
