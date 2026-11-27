@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <title>The Dark Room</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/aframe.min.js"></script>
+
+  <!-- núcleo -->
+  <script src="js/core/util.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/core/audio.js"></script>
+  <script src="js/core/textures.js"></script>
+  <script src="js/core/layout.js"></script>
+  <script src="js/core/story.js"></script>
+  <script src="js/core/input.js"></script>
+  <script src="js/core/ui.js"></script>
+  <!-- componentes A-Frame -->
+  <script src="js/components/flashlight.js"></script>
+  <script src="js/components/hidden-clue.js"></script>
+  <script src="js/components/interaction.js"></script>
+  <script src="js/components/dark-veil.js"></script>
+  <script src="js/components/room-builder.js"></script>
+  <script src="js/components/locomotion.js"></script>
+  <script src="js/components/anchor-placer.js"></script>
+  <script src="js/components/vr-hud.js"></script>
+  <script src="js/components/ui-button.js"></script>
+  <script src="js/components/props.js"></script>
+  <!-- painéis 3D e lógica de níveis -->
+  <script src="js/core/panels.js"></script>
+  <script src="js/core/levels.js"></script>
+</head>
+<body>
+  <a-scene id="scene"
+           background="color: #000"
+           renderer="antialias: true; physicallyCorrectLights: true"
+           vr-mode-ui="enabled: false"
+           loading-screen="enabled: false"
+           device-orientation-permission-ui="enabled: true"
+           webxr="optionalFeatures: local-floor, bounded-floor, hit-test, anchors, hand-tracking; overlayElement: #overlay"
+           dark-veil anchor-placer>
+    <!-- luz ambiente quase nula (também evita as luzes por defeito do A-Frame) -->
+    <a-entity id="ambient" light="type: ambient; color: #1a1c26; intensity: 0.05"></a-entity>
+
+    <a-entity id="room" room-builder></a-entity>
+    <a-entity id="world"></a-entity>
+
+    <a-entity id="rig" locomotion>
+      <a-entity id="head" camera="fov: 80; near: 0.05; far: 60" position="0 1.6 0"
+                look-controls="pointerLockEnabled: false; touchEnabled: true">
+        <a-entity id="torch" flashlight></a-entity>
+        <a-entity id="hud3d" vr-hud></a-entity>
+      </a-entity>
+      <a-entity id="handR" laser-controls="hand: right" raycaster="objects: .nothing; lineColor: #b3121a; lineOpacity: 0.35"></a-entity>
+      <a-entity id="handL" laser-controls="hand: left"  raycaster="objects: .nothing; lineColor: #b3121a; lineOpacity: 0.35"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <div id="vignette" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true"></div>
+  <div id="grain" aria-hidden="true"></div>
+
+  <!-- Todo o DOM vive em #overlay para funcionar também em AR "handheld" (DOM overlay) -->
+  <div id="overlay">
+    <div id="crosshair" class="hidden"></div>
+
+    <section id="menu" class="screen ui">
+      <div class="wall" id="menu-wall" aria-hidden="true"><img id="menu-glyph" alt=""></div>
+      <div class="beam" aria-hidden="true"></div>
+      <div class="menu-scroll"><div class="menu-inner">
+        <p class="light-hint">Mexe o rato (ou o dedo) para apontar a lanterna.</p>
+        <h1 class="logo">The Dark Room</h1>
+        <p class="intro">
+          Acordas fechado numa sala e não vês nada. Tens uma lanterna e as pistas só aparecem
+          quando a luz lhes toca. A sala adapta-se ao sítio onde estás, por isso nunca é igual.
+        </p>
+
+        <div class="modes" role="radiogroup" aria-label="Modo de jogo">
+          <button class="card selected" id="card-demo" data-mode="demo" role="radio" aria-checked="true">
+            <b>No computador</b><span>Rato e teclado. A sala é gerada à medida.</span>
+          </button>
+          <button class="card" id="card-xr" data-mode="xr" role="radio" aria-checked="false">
+            <b>AR / VR</b><span id="xr-status">A verificar WebXR…</span>
+          </button>
+        </div>
+
+        <div class="options">
+          <div class="opt" id="opt-xrkind" hidden>
+            <label>Sessão</label>
+            <label class="pill"><input type="radio" name="xrkind" value="ar" checked> AR</label>
+            <label class="pill"><input type="radio" name="xrkind" value="vr"> VR</label>
+          </div>
+          <div class="opt" id="opt-space">
+            <label>Espaço</label>
+            <label class="pill"><input type="radio" name="space" value="auto" checked> <span id="lbl-auto">Aleatório</span></label>
+            <label class="pill"><input type="radio" name="space" value="manual"> Manual</label>
+          </div>
+          <div class="opt" id="opt-dims">
+            <label>Medidas (m)</label>
+            <input type="number" id="dim-w" min="3" max="12" step="0.1" value="5.5" aria-label="Largura"> ×
+            <input type="number" id="dim-d" min="3" max="12" step="0.1" value="5" aria-label="Comprimento"> ×
+            <input type="number" id="dim-h" min="2.2" max="4" step="0.1" value="2.7" aria-label="Altura">
+            <label class="pill"><input type="checkbox" id="dim-random" checked> aleatórias</label>
+          </div>
+        </div>
+
+        <button id="btn-start" class="start">Começar</button>
+        <p class="hint" id="start-hint"></p>
+
+        <div class="howto">
+          <h2>Como jogar</h2>
+          <ul>
+            <li>A lanterna aponta para onde olhas. Só vês uma pista se a luz lhe chegar diretamente.</li>
+            <li>Anda pela sala e olha também para cima e para trás.</li>
+            <li>Computador: <kbd>WASD</kbd> anda, <kbd>E</kbd> ou clique usa, <kbd>F</kbd> liga a lanterna, <kbd>Q</kbd> fecha o painel, <kbd>H</kbd> ajuda.</li>
+            <li>VR: o comando direito é a lanterna e o gatilho usa. O botão B fecha painéis.</li>
+            <li>AR: toca nas paredes e mesas para marcar a sala; depois toca para usar.</li>
+          </ul>
+        </div>
+      </div></div>
+    </section>
+
+    <section id="placing" class="ui hidden">
+      <div class="placing-box">
+        <b>Marcar o espaço</b>
+        <p id="placing-text">Aponta para paredes, mesas e chão e marca alguns pontos.</p>
+        <div class="placing-row">
+          <span id="placing-count">0 / 8</span>
+          <button id="btn-undo" class="small">Desfazer</button>
+          <button id="btn-finish" class="small primary">Concluir</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="hud" class="ui hidden">
+      <div class="hud-top">
+        <div class="hud-level"><span id="hud-level">Nível 1</span> <em id="hud-name">O código</em></div>
+        <div class="hud-count">Pistas <span id="hud-found">0</span>/<span id="hud-total">4</span></div>
+      </div>
+      <div class="hud-objective" id="hud-objective"></div>
+      <div class="hud-notebook" id="hud-notebook"></div>
+      <div class="hud-buttons">
+        <button id="btn-hint" class="icon text" title="Dica (G)" aria-label="Dica">Dica</button>
+        <button id="btn-sound" class="icon text" title="Som (M)" aria-label="Som">Som</button>
+        <button id="btn-help" class="icon" title="Ajuda (H)" aria-label="Ajuda">?</button>
+        <button id="btn-journal" class="icon text" title="Notas" aria-label="Notas">Notas</button>
+      </div>
+    </section>
+
+    <div id="prompt" class="hidden"></div>
+    <div id="subtitle" class="hidden"></div>
+    <div id="toast" class="hidden"></div>
+
+    <section id="titlecard" class="hidden"><h2 id="tc-title"></h2><p id="tc-sub"></p></section>
+
+    <section id="modal-help" class="modal ui hidden">
+      <div class="modal-box">
+        <h3>Ajuda</h3>
+        <ul>
+          <li>Aponta a lanterna: só o que o feixe apanha aparece.</li>
+          <li><kbd>E</kbd>, clique ou gatilho: usar o que estás a apontar.</li>
+          <li><kbd>F</kbd> liga e desliga a lanterna. A roda do rato fecha ou abre o feixe.</li>
+          <li><kbd>G</kbd> pede uma dica. <kbd>M</kbd> liga ou desliga o som.</li>
+          <li><kbd>Q</kbd> ou botão B: fechar o painel aberto.</li>
+        </ul>
+        <button class="small primary" data-close="modal-help">Fechar</button>
+      </div>
+    </section>
+
+    <section id="modal-journal" class="modal ui hidden">
+      <div class="modal-box">
+        <h3>Notas</h3>
+        <ol id="journal-list"></ol>
+        <button class="small primary" data-close="modal-journal">Fechar</button>
+      </div>
+    </section>
+
+    <section id="end" class="screen ui hidden">
+      <div class="menu-inner">
+        <h1 class="logo" id="end-title"></h1>
+        <p class="intro" id="end-text"></p>
+        <p class="stats" id="end-stats"></p>
+        <button id="btn-restart" class="start">Jogar outra vez</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
