@@ -1,7 +1,7 @@
 # THE DARK ROOM — Adaptive Escape Room (A-Frame / WebXR)
 
 Protótipo de um Escape Room em realidade aumentada/mista para a UC *Ambientes Interativos de Realidade Virtual*.
-Esta versão tem só o nível 1. A sala **não é fixa**: adapta-se ao espaço físico (AR hit-test), às dimensões definidas pelo utilizador (modo manual) ou
+A sala **não é fixa**: adapta-se ao espaço físico (AR hit-test), às dimensões definidas pelo utilizador (modo manual) ou
 é gerada proceduralmente (modo DEMO). Tudo está às escuras; só a lanterna revela as pistas.
 
 ## Como correr
@@ -62,11 +62,15 @@ o tamanho angular do objeto), alcance, se a superfície olha para o jogador e se
 valor `r` sobe (≈1 s) e a opacidade cresce com cintilação; sem luz volta a desvanecer. Em AR o `dark-veil` aplica a mesma
 máscara a uma esfera preta, deixando ver a sala real apenas dentro do feixe.
 
-## Nível disponível
-**Nível 1 · O código:** 4 números escondidos (parede, mesa ou objeto, perto da porta, chão ou objeto). Cada um tem traços que indicam a posição. O código escreve-se num teclado 3D e abre a porta.
+## Níveis
+| Nível | Mecânica |
+|---|---|
+| 1 · O código | 4 números escondidos (parede, mesa ou objeto, perto da porta, chão ou objeto). Cada um tem traços que indicam a posição. O código escreve-se num teclado 3D e abre a porta. |
+| 2 · O puzzle | 4 fragmentos de fotografia escondidos, cada um com o símbolo certo de um cubo. Na sala há 4 cubos de pedra com 4 desenhos cada; rodam-se 90º até todos mostrarem o símbolo certo (estilo Uncharted). |
+| 3 · A verdade | 5 placas de símbolos (1 isca) e 3 setas A→B→C→D escondidas. Descobrir a sequência e introduzi-la no altar abre a porta. |
 
 ## Notas e limitações
-* Testado em Chromium desktop (modo DEMO, manual e o nível 1 até ao final). O código WebXR (hit-test, controladores, véu AR,
+* Testado em Chromium desktop (modo DEMO, manual e os três níveis até ao final). O código WebXR (hit-test, controladores, véu AR,
   HUD 3D) está implementado mas **precisa de ser validado em dispositivo** (Quest 3 / Android Chrome).
 * O hit-test deteta o que o dispositivo expõe; paredes só são detetadas em dispositivos com *scene understanding*.
   Em caso de falha há fallback para marcação por olhar e para o modo manual.

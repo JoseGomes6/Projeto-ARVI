@@ -95,12 +95,12 @@
   const SYMBOLS = ['eye', 'moon', 'key', 'flame', 'hourglass', 'serpent'];
   const SYMBOL_NAMES = { eye: 'Olho', moon: 'Lua', key: 'Chave', flame: 'Chama', hourglass: 'Ampulheta', serpent: 'Serpente' };
 
-  function drawSymbol(g, name, cx, cy, r, lw) {
+  function drawSymbol(g, name, cx, cy, r, lw, ink) {
     g.save();
     g.translate(cx, cy);
     g.lineWidth = lw || r * 0.1; g.lineCap = 'round'; g.lineJoin = 'round';
-    g.strokeStyle = BONE; g.fillStyle = BONE;
-    glow(g, BLOOD, r * 0.35);
+    g.strokeStyle = ink || BONE; g.fillStyle = ink || BONE;
+    if (ink) glow(g, 'transparent', 0); else glow(g, BLOOD, r * 0.35);
     g.beginPath();
     switch (name) {
       case 'eye':
@@ -170,51 +170,37 @@
     return c;
   }
 
-  /* ------- puzzle: sigilo + 4 peças ------- */
-  function sigilCanvas(seed) {
-    const S = 512, c = canvas(S, S), g = c.getContext('2d');
-    g.fillStyle = '#16100f'; g.fillRect(0, 0, S, S);
-    g.strokeStyle = BONE; g.fillStyle = BONE; g.lineCap = 'round';
-    glow(g, BLOOD, 16);
-    // anéis
-    g.lineWidth = 7;
-    [235, 205].forEach((r) => { g.beginPath(); g.arc(S / 2, S / 2, r, 0, Math.PI * 2); g.stroke(); });
-    // raios (número depende da semente => cada partida é diferente)
-    const spokes = 8 + (seed % 5) * 2;
-    g.lineWidth = 3;
-    for (let i = 0; i < spokes; i++) {
-      const a = (i / spokes) * Math.PI * 2;
-      g.beginPath();
-      g.moveTo(S / 2 + Math.cos(a) * 130, S / 2 + Math.sin(a) * 130);
-      g.lineTo(S / 2 + Math.cos(a) * 200, S / 2 + Math.sin(a) * 200);
-      g.stroke();
-    }
-    // triângulo + olho central
-    g.lineWidth = 6;
+  /* ------- puzzle dos cubos ------- */
+  // fragmento de fotografia rasgado com o símbolo certo de um cubo e a sua posição (traços)
+  function fragCanvas(name, pos) {
+    const S = 256, c = canvas(S, S), g = c.getContext('2d');
+    g.save();
     g.beginPath();
-    for (let i = 0; i < 3; i++) {
-      const a = -Math.PI / 2 + (i * Math.PI * 2) / 3;
-      const x = S / 2 + Math.cos(a) * 140, y = S / 2 + Math.sin(a) * 140;
-      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
-    }
-    g.closePath(); g.stroke();
-    drawSymbol(g, 'eye', S / 2, S / 2 + 8, 70, 6);
-    // assinatura vermelha
-    g.fillStyle = BLOOD; glow(g, BLOOD, 22);
-    g.font = '700 30px "Courier New", monospace'; g.textAlign = 'center';
-    g.fillText('SUJEITO 17', S / 2, 62);
-    g.beginPath(); g.arc(S / 2, S - 52, 9, 0, Math.PI * 2); g.fill();
+    const pts = [[18, 24], [90, 12], [170, 22], [238, 14], [244, 96], [232, 170], [246, 236], [150, 244], [70, 236], [14, 244], [24, 160], [10, 86]];
+    pts.forEach((q, i) => { if (i === 0) g.moveTo(q[0], q[1]); else g.lineTo(q[0], q[1]); });
+    g.closePath(); g.clip();
+    const gr = g.createLinearGradient(0, 0, S, S);
+    gr.addColorStop(0, '#a79e90'); gr.addColorStop(1, '#6f695f');
+    g.fillStyle = gr; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 900; i++) { g.fillStyle = 'rgba(0,0,0,' + (Math.random() * 0.08) + ')'; g.fillRect(Math.random() * S, Math.random() * S, 2, 2); }
+    drawSymbol(g, name, 128, 112, 64, 9, '#6b0f14');
+    g.fillStyle = '#6b0f14';
+    const gap = 26, x0 = 128 - ((pos - 1) * gap) / 2;
+    for (let i = 0; i < pos; i++) g.fillRect(x0 + i * gap - 3, 196, 6, 28);
+    g.restore();
+    g.strokeStyle = 'rgba(0,0,0,0.75)'; g.lineWidth = 5; g.lineJoin = 'round';
+    g.beginPath(); pts.forEach((q, i) => { if (i === 0) g.moveTo(q[0], q[1]); else g.lineTo(q[0], q[1]); }); g.closePath(); g.stroke();
     return c;
   }
 
-  function pieceCanvas(sigil, idx) {
+  // face gravada de um cubo de pedra
+  function cubeFaceCanvas(name) {
     const S = 256, c = canvas(S, S), g = c.getContext('2d');
-    const sx = (idx % 2) * S, sy = Math.floor(idx / 2) * S;
-    g.drawImage(sigil, sx, sy, S, S, 0, 0, S, S);
-    // borda rasgada
-    g.globalCompositeOperation = 'source-over';
-    g.strokeStyle = 'rgba(0,0,0,0.9)'; g.lineWidth = 10; g.strokeRect(0, 0, S, S);
-    g.strokeStyle = 'rgba(230,220,210,0.55)'; g.lineWidth = 2; g.strokeRect(6, 6, S - 12, S - 12);
+    g.fillStyle = '#2b2b2d'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 1400; i++) { g.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.05) + ')'; g.fillRect(Math.random() * S, Math.random() * S, 2, 2); }
+    g.strokeStyle = 'rgba(0,0,0,0.6)'; g.lineWidth = 8; g.strokeRect(4, 4, S - 8, S - 8);
+    g.strokeStyle = 'rgba(230,220,210,0.22)'; g.lineWidth = 3; g.strokeRect(14, 14, S - 28, S - 28);
+    drawSymbol(g, name, S / 2, S / 2, 72, 9);
     return c;
   }
 
@@ -244,22 +230,15 @@
       case 'digit': c = digitCanvas(p[1], +p[2]); break;
       case 'sym': c = symbolCanvas(p[1]); break;
       case 'rel': c = relationCanvas(p[1], p[2]); break;
-      case 'piece': c = pieceCanvas(DR.textures.sigil(), +p[1]); break;
+      case 'frag': c = fragCanvas(p[1], +p[2]); break;
+      case 'cube': c = cubeFaceCanvas(p[1]); break;
       default: c = canvas(8, 8);
     }
     return (cache[key] = { canvas: c, texture: texFrom(c) });
   }
 
-  let sigilC = null, sigilSeed = 0;
   DR.textures = {
     BONE, BLOOD, SYMBOLS, SYMBOL_NAMES,
     canvas, texFrom, surface, labelCanvas, drawSymbol, symbolCanvas, glyph,
-    newSigil() {
-      sigilSeed = DR.util.randInt(0, 40);
-      sigilC = sigilCanvas(sigilSeed);
-      Object.keys(cache).filter((k) => k.indexOf('piece:') === 0).forEach((k) => delete cache[k]);
-      return sigilC;
-    },
-    sigil() { return sigilC || this.newSigil(); },
   };
 })();

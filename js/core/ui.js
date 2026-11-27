@@ -18,7 +18,7 @@
     } else if (st.level === 2) {
       for (let i = 0; i < 4; i++) {
         const has = st.piecesCollected.includes(i);
-        out.push(has ? { type: 'img', key: 'piece:' + i } : { type: 'text', text: '?', empty: true });
+        out.push(has ? { type: 'img', key: 'frag:' + st.puzzleSolution[i] + ':' + (i + 1) } : { type: 'text', text: '?', empty: true });
       }
     } else if (st.level === 3) {
       st.symbolsFound.forEach((s) => out.push({ type: 'sym', name: s }));

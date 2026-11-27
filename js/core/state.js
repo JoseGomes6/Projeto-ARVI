@@ -20,7 +20,8 @@
     levelTotals: { 1: 4, 2: 4, 3: 8 },
     code: [],              // nível 1
     codeFound: [null, null, null, null],
-    piecesCollected: [],   // nível 2
+    piecesCollected: [],   // nível 2: fragmentos recolhidos (índice = cubo)
+    puzzleSolution: [],    // nível 2: símbolo certo de cada cubo
     sequence: [],          // nível 3 (nomes de símbolos)
     symbolsFound: [],
     relationsFound: [],    // [{a,b}]
@@ -37,6 +38,7 @@
       this.code = [];
       this.codeFound = [null, null, null, null];
       this.piecesCollected = [];
+      this.puzzleSolution = [];
       this.sequence = [];
       this.symbolsFound = [];
       this.relationsFound = [];

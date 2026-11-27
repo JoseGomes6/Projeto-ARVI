@@ -38,19 +38,25 @@
     },
 
     2() {
-      DR.textures.newSigil();
-      DR.panels._trayOrder = null;
       DR.state.piecesCollected = [];
+      // símbolo certo de cada um dos 4 cubos (aleatório em cada partida)
+      const all = DR.textures.SYMBOLS;
+      const solution = U.shuffle(all).slice(0, 4);
+      DR.state.puzzleSolution = solution;
+      // cada cubo tem 4 faces diferentes (uma delas é a certa) e começa rodado ao acaso, nunca já resolvido
+      let faces, rots;
+      do {
+        faces = solution.map((sym) => U.shuffle([sym].concat(U.shuffle(all.filter((x) => x !== sym)).slice(0, 3))));
+        rots = solution.map(() => U.randInt(0, 3));
+      } while (solution.every((sym, i) => faces[i][(4 - rots[i]) % 4] === sym));
+
       layout.pick(4, { minDist: 1.5 }).forEach((s, i) => {
-        const el = DR.props.clue(s, { key: 'piece:' + i, size: 0.32, id: 'piece' + i, group: 'piece', idx: i, interact: 'Recolher fragmento' });
+        const el = DR.props.clue(s, { key: 'frag:' + solution[i] + ':' + (i + 1), size: 0.34, id: 'piece' + i, group: 'piece', idx: i, interact: 'Recolher fragmento' });
         el.addEventListener('interact', () => collectPiece(el));
         track(el);
       });
       const st = layout.pick(1, { kinds: ['table', 'floor', 'wall'], minDist: 1.4 })[0];
-      stationEl = track(DR.props.terminal(st, {
-        icon: 'board', w: 0.4, h: 0.4, label: 'Montar a fotografia',
-        onUse: () => DR.panels.puzzle(() => DR.levels.complete(2)),
-      }));
+      stationEl = track(DR.props.cubePuzzle(st, { solution, faces, rots, onSolved: () => DR.levels.complete(2) }));
     },
 
     3() {
@@ -144,7 +150,7 @@
         b.object3D.getWorldPosition(v1); return da - v1.distanceTo(v2);
       });
       text = describeDirection(left[0], cam);
-    } else if (stationEl) text = 'Já tens o que precisas. Procura o ' + (st.level === 1 ? 'teclado' : st.level === 2 ? 'ponto de montagem' : 'altar') + ' (o LED vermelho a piscar).';
+    } else if (stationEl) text = 'Já tens o que precisas. Procura o ' + (st.level === 1 ? 'teclado' : st.level === 2 ? 'puzzle dos cubos' : 'altar') + ' (o LED vermelho a piscar).';
     else return;
     lastHint = now;
     DR.audio.hint();

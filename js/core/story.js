@@ -23,15 +23,15 @@
       },
       2: {
         title: 'Nível 2 · O puzzle',
-        sub: 'Reúne os fragmentos de uma fotografia.',
-        objective: 'Recolhe 4 fragmentos escondidos e monta-os na mesa de montagem.',
+        sub: 'Reúne os fragmentos e roda os cubos.',
+        objective: 'Recolhe 4 fragmentos escondidos. Cada um mostra o símbolo certo de um cubo. Roda os cubos até acertares.',
         clues: [
-          'Um fragmento de fotografia. Alguém de costas, a olhar para uma porta.',
-          'Outro pedaço. A mesma sala… mas com janelas.',
+          'Um fragmento de fotografia. Alguém riscou um símbolo por cima.',
+          'Outro pedaço. Os traços por baixo parecem indicar uma ordem.',
           'Reconheces a caligrafia no verso. É a tua.',
           'A fotografia nunca foi do Dr. Vale. Foste tu que a tiraste.',
         ],
-        outro: 'A imagem completa: um olho dentro de um círculo. «Vê-te a ti próprio.»',
+        outro: 'Os cubos encaixam. Algures, algo abre-se.',
       },
       3: {
         title: 'Nível 3 · A verdade',

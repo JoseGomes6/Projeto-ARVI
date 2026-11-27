@@ -1,4 +1,4 @@
-/* THE DARK ROOM — painéis 3D interativos (teclado, montagem do puzzle, altar de símbolos).
+/* THE DARK ROOM — painéis 3D interativos (teclado e altar de símbolos).
  * Abrem à frente do jogador, são apontados com a lanterna/cabeça/controlador e ativados
  * com o mesmo botão de ação do resto do jogo. Nada de ecrãs 2D de perguntas e respostas:
  * são objetos no espaço que o jogador usa depois de os ter encontrado no escuro. */
@@ -96,66 +96,6 @@
       const onKey = (e) => { if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'back') { code = code.slice(0, -1); show(); } else if (e.key === 'enter') submit(); };
       DR.bus.on('key', onKey);
       current.cleanup.push(() => DR.bus.off('key', onKey));
-    },
-
-    /* ---------------- NÍVEL 2: mesa de montagem ---------------- */
-    puzzle(onSolved) {
-      const root = openRoot(0.92, 0.6, 'Montagem', null);
-      const S = DR.state;
-      const slotPiece = [null, null, null, null];           // slot -> índice da peça
-      const order = DR.panels._trayOrder || (DR.panels._trayOrder = U.shuffle([0, 1, 2, 3]));
-      let selected = null, locked = false;
-      const status = label(root, 0, -0.245, 0.8, 0.06, 'Seleciona um fragmento e depois o seu lugar.', { size: 0.5, fg: '#8b8782' });
-      const slots = [], tiles = [];
-      const size = 0.19;
-
-      const refresh = () => {
-        slots.forEach((b, i) => {
-          const p = slotPiece[i];
-          set(b, 'img', p == null ? '' : 'piece:' + p);
-          set(b, 'label', p == null ? '+' : '');
-        });
-        tiles.forEach((b) => {
-          const p = b.pieceIdx, have = S.piecesCollected.includes(p), placed = slotPiece.includes(p);
-          set(b, 'img', have && !placed ? 'piece:' + p : '');
-          set(b, 'label', have ? '' : '?');
-          set(b, 'disabled', !have || placed);
-          set(b, 'selected', selected === p);
-        });
-      };
-      const check = () => {
-        if (slotPiece.some((p) => p == null)) return;
-        if (slotPiece.every((p, i) => p === i)) {
-          locked = true; set(status, 'label', 'A fotografia está completa.'); set(status, 'fg', '#e6dcd2');
-          slots.forEach((b) => set(b, 'flash', '#0d3a1c')); DR.audio.unlock();
-          setTimeout(() => { DR.panels.close(); onSolved(); }, 1500);
-        } else {
-          DR.audio.error(); set(status, 'label', 'As peças não encaixam. Tenta outra ordem.'); set(status, 'fg', '#b3121a');
-          slots.forEach((b) => { set(b, 'flash', '#4a0d12'); setTimeout(() => set(b, 'flash', ''), 450); });
-        }
-      };
-
-      for (let i = 0; i < 4; i++) {
-        const x = -0.33 + (i % 2) * (size + 0.02), y = 0.1 - Math.floor(i / 2) * (size + 0.02);
-        slots.push(button(root, x, y, size, size, { label: '+', size: 0.4, bg: '#0c0c0e' }, 'Colocar fragmento', () => {
-          if (locked) return;
-          if (selected != null && slotPiece[i] == null) { slotPiece[i] = selected; selected = null; DR.audio.place(); }
-          else if (selected == null && slotPiece[i] != null) { slotPiece[i] = null; DR.audio.click(); }
-          else if (selected != null) { const prev = slotPiece[i]; slotPiece[i] = selected; selected = prev; DR.audio.place(); }
-          set(status, 'label', 'Seleciona um fragmento e depois o seu lugar.'); set(status, 'fg', '#8b8782');
-          refresh(); check();
-        }));
-      }
-      label(root, 0.235, 0.215, 0.34, 0.045, 'FRAGMENTOS', { size: 0.5, fg: '#5a5652' });
-      order.forEach((p, i) => {
-        const x = 0.14 + (i % 2) * 0.19, y = 0.1 - Math.floor(i / 2) * 0.19;
-        const t = button(root, x, y, size - 0.02, size - 0.02, { label: '?', size: 0.4 }, 'Pegar fragmento', () => {
-          if (locked || !S.piecesCollected.includes(p) || slotPiece.includes(p)) return;
-          selected = selected === p ? null : p; DR.audio.key(); refresh();
-        });
-        t.pieceIdx = p; tiles.push(t);
-      });
-      refresh();
     },
 
     /* ---------------- NÍVEL 3: altar de símbolos ---------------- */
